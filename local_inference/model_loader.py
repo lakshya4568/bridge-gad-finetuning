@@ -18,6 +18,7 @@ class ModelConfig:
     base_model_path: Path = Path("./base_model")
     adapter_path: Path = Path("./adapter")
     download_base_model: bool = True
+    require_cuda: bool = True
     load_in_4bit: bool = True
     max_input_tokens: int = 2048
 
@@ -72,6 +73,12 @@ def load_model_and_tokenizer(config: ModelConfig | None = None):
     _validate_adapter_path(config)
     base_model_path = _ensure_base_model(config)
     device = select_device()
+    if config.require_cuda and device != "cuda":
+        raise RuntimeError(
+            "CUDA GPU is required by this configuration, but torch.cuda.is_available() "
+            "is False. Install a CUDA-enabled PyTorch build and verify your NVIDIA "
+            "driver, or set require_cuda=False to allow CPU inference."
+        )
 
     tokenizer = AutoTokenizer.from_pretrained(
         base_model_path,

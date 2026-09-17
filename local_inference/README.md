@@ -59,3 +59,5 @@ validate final calculations with deterministic engineering code and applicable
 railway standards.
 
 The application uses NF4 4-bit loading on CUDA by default. Set `load_in_4bit=False` in `app.py` if you need a non-quantized CUDA load and have enough VRAM. The downloaded base model and adapter weights are ignored by git; only code and configuration are committed.
+
+The app and smoke test set `require_cuda=True`. This prevents an accidental CPU run and raises a clear error when CUDA is unavailable. Set `require_cuda=False` only when you intentionally want CPU inference.

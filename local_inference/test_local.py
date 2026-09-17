@@ -23,6 +23,7 @@ CONFIG = ModelConfig(
     base_model_path=Path("./base_model"),
     adapter_path=Path("./adapter"),
     download_base_model=True,
+    require_cuda=True,
     load_in_4bit=True,
 )
 
