@@ -128,11 +128,15 @@ def generate_text(
     model,
     tokenizer,
     prompt: str,
+    system_prompt: str | None = None,
     max_new_tokens: int = 400,
     temperature: float = 0.1,
     top_p: float = 0.9,
 ) -> str:
-    messages = [{"role": "user", "content": prompt}]
+    messages = []
+    if system_prompt:
+        messages.append({"role": "system", "content": system_prompt})
+    messages.append({"role": "user", "content": prompt})
     prompt_text = tokenizer.apply_chat_template(
         messages,
         tokenize=False,

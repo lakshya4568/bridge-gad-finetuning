@@ -24,15 +24,29 @@ def respond(prompt: str, max_new_tokens: int, temperature: float, top_p: float) 
     if not prompt.strip():
         return "Enter a question first."
     formatted_prompt = (
-        "Answer as a railway bridge planning specialist. Use clean Markdown. "
-        "Render mathematical equations with LaTeX: use $...$ inline and "
-        "$$...$$ for displayed equations. Use tables or JSON when useful.\n\n"
-        f"User question:\n{prompt}"
+        f"{prompt}\n\n"
+        "Answer for a human reader. Start with a short plain-language explanation, "
+        "then add a clearly labeled Formula section, define every variable, and "
+        "finish with a practical bridge-design note when relevant. Use clean "
+        "Markdown and LaTeX equations. Do not return JSON unless the user "
+        "explicitly asks for JSON. Do not respond with only an equation."
+    )
+    system_prompt = (
+        "You are an expert railway bridge planning assistant grounded in the "
+        "IRICEN training material. Give the exact bridge formula requested, "
+        "explain what it means in plain language, define its variables, and use "
+        "Markdown. Render equations with $...$ or $$...$$. Never invent "
+        "alternative formulas. For normal alluvial scour, use exactly "
+        "D = 0.473 * (Qf / f)^(1/3), with f = 1.76 * sqrt(m). For an "
+        "abutment use 1.25 * D; for a pier nose use 2.00 * D. Never replace "
+        "these with pressure, temperature, hydraulic-gradient, or polynomial "
+        "formulas."
     )
     return generate_text(
         MODEL,
         TOKENIZER,
         formatted_prompt,
+        system_prompt=system_prompt,
         max_new_tokens=int(max_new_tokens),
         temperature=float(temperature),
         top_p=float(top_p),
@@ -45,7 +59,7 @@ CSS = """
 .formula-note { color: #5b6472; font-size: 0.92rem; }
 """
 
-with gr.Blocks(title="Railway Bridge Assistant", css=CSS, theme=gr.themes.Soft()) as demo:
+with gr.Blocks(title="Railway Bridge Assistant") as demo:
     with gr.Column(elem_classes="formula-app"):
         gr.Markdown(
             "# Railway Bridge Assistant\n"
@@ -53,7 +67,7 @@ with gr.Blocks(title="Railway Bridge Assistant", css=CSS, theme=gr.themes.Soft()
         )
         gr.Markdown(
             "Formulas are rendered as Markdown/LaTeX. For example: "
-            "$D = 0.473\\left(\\frac{Q_f}{f}\\right)^{1/3}$",
+            "$$D = 0.473\\left(\\frac{Q_f}{f}\\right)^{1/3}$$",
             elem_classes="formula-note",
         )
         with gr.Row():
@@ -86,4 +100,4 @@ with gr.Blocks(title="Railway Bridge Assistant", css=CSS, theme=gr.themes.Soft()
 
 
 if __name__ == "__main__":
-    demo.launch()
+    demo.launch(theme=gr.themes.Soft(), css=CSS)
