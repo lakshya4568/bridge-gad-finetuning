@@ -23,29 +23,64 @@ print("Model ready.")
 def respond(prompt: str, max_new_tokens: int, temperature: float, top_p: float) -> str:
     if not prompt.strip():
         return "Enter a question first."
+    formatted_prompt = (
+        "Answer as a railway bridge planning specialist. Use clean Markdown. "
+        "Render mathematical equations with LaTeX: use $...$ inline and "
+        "$$...$$ for displayed equations. Use tables or JSON when useful.\n\n"
+        f"User question:\n{prompt}"
+    )
     return generate_text(
         MODEL,
         TOKENIZER,
-        prompt,
+        formatted_prompt,
         max_new_tokens=int(max_new_tokens),
         temperature=float(temperature),
         top_p=float(top_p),
     )
 
 
-with gr.Blocks(title="Railway Bridge Assistant") as demo:
-    gr.Markdown("# Railway Bridge Assistant\nLocal Qwen model with your LoRA adapter")
-    prompt = gr.Textbox(
-        label="Prompt",
-        lines=6,
-        placeholder="Ask about scour, waterway, foundations, or CAD parameters...",
-    )
-    with gr.Row():
-        max_new_tokens = gr.Slider(32, 1024, value=400, step=1, label="Max new tokens")
-        temperature = gr.Slider(0.0, 1.5, value=0.1, step=0.05, label="Temperature")
-        top_p = gr.Slider(0.1, 1.0, value=0.9, step=0.05, label="Top-p")
-    submit = gr.Button("Generate", variant="primary")
-    output = gr.Markdown(label="Answer")
+CSS = """
+.formula-app { max-width: 1180px; margin: 0 auto; }
+.answer-panel { min-height: 420px; border: 1px solid #d8dee9; border-radius: 12px; padding: 18px; }
+.formula-note { color: #5b6472; font-size: 0.92rem; }
+"""
+
+with gr.Blocks(title="Railway Bridge Assistant", css=CSS, theme=gr.themes.Soft()) as demo:
+    with gr.Column(elem_classes="formula-app"):
+        gr.Markdown(
+            "# Railway Bridge Assistant\n"
+            "Ask about bridge planning, scour, waterways, foundations, or CAD parameters."
+        )
+        gr.Markdown(
+            "Formulas are rendered as Markdown/LaTeX. For example: "
+            "$D = 0.473\\left(\\frac{Q_f}{f}\\right)^{1/3}$",
+            elem_classes="formula-note",
+        )
+        with gr.Row():
+            with gr.Column(scale=1):
+                prompt = gr.Textbox(
+                    label="Question",
+                    lines=8,
+                    placeholder="Example: What is Lacey's formula for normal scour depth?",
+                )
+                with gr.Row():
+                    max_new_tokens = gr.Slider(32, 1024, value=400, step=1, label="Max tokens")
+                    temperature = gr.Slider(0.0, 1.5, value=0.1, step=0.05, label="Temperature")
+                    top_p = gr.Slider(0.1, 1.0, value=0.9, step=0.05, label="Top-p")
+                submit = gr.Button("Generate answer", variant="primary")
+            with gr.Column(scale=1):
+                output = gr.Markdown(label="Answer", elem_classes="answer-panel")
+
+        gr.Examples(
+            examples=[
+                ["State Lacey's normal scour depth formula and define every variable."],
+                ["What are the abutment and pier scour multipliers? Show the equations."],
+                ["Return CAD JSON for an RCC single-cell box culvert with key dimensions."],
+            ],
+            inputs=prompt,
+            label="Example questions",
+        )
+
     submit.click(respond, [prompt, max_new_tokens, temperature, top_p], output)
     prompt.submit(respond, [prompt, max_new_tokens, temperature, top_p], output)
 
