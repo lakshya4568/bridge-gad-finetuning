@@ -69,8 +69,8 @@ def _validate_adapter_path(config: ModelConfig) -> None:
 
 def load_model_and_tokenizer(config: ModelConfig | None = None):
     config = config or ModelConfig()
-    base_model_path = _ensure_base_model(config)
     _validate_adapter_path(config)
+    base_model_path = _ensure_base_model(config)
     device = select_device()
 
     tokenizer = AutoTokenizer.from_pretrained(

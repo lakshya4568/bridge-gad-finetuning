@@ -41,4 +41,21 @@ For a quick loader check without launching the UI:
 uv run python -c "from model_loader import load_model_and_tokenizer; load_model_and_tokenizer(); print('model loaded')"
 ```
 
+## Test GPU/CPU and responses
+
+Run the smoke-test script:
+
+```bash
+uv run python test_local.py
+```
+
+It reports CUDA availability, selected device, model parameter placement, GPU
+name and VRAM usage when CUDA is available. It then tests Lacey's scour formula,
+scour multipliers, regime waterway, foundation grip length, and a CAD JSON
+response. The script exits with status `1` when expected content is missing.
+
+The checks are only smoke tests. They do not certify engineering correctness;
+validate final calculations with deterministic engineering code and applicable
+railway standards.
+
 The application uses NF4 4-bit loading on CUDA by default. Set `load_in_4bit=False` in `app.py` if you need a non-quantized CUDA load and have enough VRAM. The downloaded base model and adapter weights are ignored by git; only code and configuration are committed.
