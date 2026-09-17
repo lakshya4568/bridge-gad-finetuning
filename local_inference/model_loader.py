@@ -101,10 +101,12 @@ def load_model_and_tokenizer(config: ModelConfig | None = None):
             bnb_4bit_compute_dtype=torch.float16,
             bnb_4bit_use_double_quant=True,
         )
-        model_kwargs["device_map"] = "auto"
+        # Force the complete quantized model onto GPU 0. Auto placement can
+        # offload layers into system RAM.
+        model_kwargs["device_map"] = {"": 0}
         model_kwargs["torch_dtype"] = torch.float16
     elif device == "cuda":
-        model_kwargs["device_map"] = "auto"
+        model_kwargs["device_map"] = {"": 0}
         model_kwargs["torch_dtype"] = torch.float16
     else:
         model_kwargs["torch_dtype"] = torch.float32

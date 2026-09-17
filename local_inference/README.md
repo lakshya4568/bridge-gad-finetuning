@@ -27,17 +27,18 @@ tokenizer from `base_model/` so the base model and tokenizer stay together.
 
 ## Run
 
-From this directory:
+From PowerShell, run from the project directory:
 
-```bash
+```powershell
+Set-Location .\local_inference
 uv run python app.py
 ```
 
-The app prints a local URL. Open it in a browser and enter a bridge-planning or CAD prompt. CUDA is selected automatically when available; otherwise the loader uses CPU.
+The app prints a local URL. Open it in a browser and enter a bridge-planning or CAD prompt. The current configuration requires CUDA and will stop instead of silently using CPU.
 
 For a quick loader check without launching the UI:
 
-```bash
+```powershell
 uv run python -c "from model_loader import load_model_and_tokenizer; load_model_and_tokenizer(); print('model loaded')"
 ```
 
@@ -45,7 +46,7 @@ uv run python -c "from model_loader import load_model_and_tokenizer; load_model_
 
 Run the smoke-test script:
 
-```bash
+```powershell
 uv run python test_local.py
 ```
 
@@ -57,6 +58,12 @@ response. The script exits with status `1` when expected content is missing.
 The checks are only smoke tests. They do not certify engineering correctness;
 validate final calculations with deterministic engineering code and applicable
 railway standards.
+
+The loader forces the full quantized model onto CUDA device 0. It does not use
+`device_map=\"auto\"`, because automatic placement can offload layers to system
+RAM. The test prints CUDA availability, the first model parameter device, the
+model device map, and allocated/reserved VRAM. It fails if the model is not on
+CUDA.
 
 The application uses NF4 4-bit loading on CUDA by default. Set `load_in_4bit=False` in `app.py` if you need a non-quantized CUDA load and have enough VRAM. The downloaded base model and adapter weights are ignored by git; only code and configuration are committed.
 

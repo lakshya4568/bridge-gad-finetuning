@@ -65,10 +65,16 @@ def print_runtime_info(model) -> None:
     print("- CUDA available:", torch.cuda.is_available())
     print("- selected device:", device)
     print("- first model parameter device:", first_parameter_device)
+    print("- model device map:", getattr(model, "hf_device_map", "not exposed"))
     if torch.cuda.is_available():
         print("- GPU:", torch.cuda.get_device_name(0))
         print("- allocated VRAM (GB):", round(torch.cuda.memory_allocated() / 1e9, 2))
         print("- reserved VRAM (GB):", round(torch.cuda.memory_reserved() / 1e9, 2))
+        if first_parameter_device.type != "cuda":
+            raise RuntimeError(
+                f"Model parameter is on {first_parameter_device}, not CUDA. "
+                "GPU loading did not succeed."
+            )
 
 
 def validate_response(test: dict, response: str) -> list[str]:
