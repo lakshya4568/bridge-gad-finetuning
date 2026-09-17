@@ -7,14 +7,17 @@ from pathlib import Path
 from typing import Any
 
 import torch
+from huggingface_hub import snapshot_download
 from peft import PeftModel
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
 
 @dataclass(frozen=True)
 class ModelConfig:
+    base_model_id: str = "Qwen/Qwen2.5-1.5B-Instruct"
     base_model_path: Path = Path("./base_model")
     adapter_path: Path = Path("./adapter")
+    download_base_model: bool = True
     load_in_4bit: bool = True
     max_input_tokens: int = 2048
 
@@ -23,12 +26,36 @@ def select_device() -> str:
     return "cuda" if torch.cuda.is_available() else "cpu"
 
 
-def _validate_paths(config: ModelConfig) -> None:
-    if not config.base_model_path.exists():
+def _base_model_is_complete(path: Path) -> bool:
+    required_files = ("config.json", "tokenizer.json", "tokenizer_config.json")
+    has_weights = any(path.glob("*.safetensors")) or any(path.glob("*.bin"))
+    return path.exists() and all((path / name).exists() for name in required_files) and has_weights
+
+
+def _ensure_base_model(config: ModelConfig) -> Path:
+    if _base_model_is_complete(config.base_model_path):
+        return config.base_model_path
+    if not config.download_base_model:
         raise FileNotFoundError(
-            f"Base model directory not found: {config.base_model_path}. "
-            "Place the local Qwen2.5-1.5B-Instruct files there."
+            f"Base model is incomplete at {config.base_model_path}. "
+            "Set download_base_model=True or place the complete local model there."
         )
+
+    config.base_model_path.mkdir(parents=True, exist_ok=True)
+    print(f"Downloading {config.base_model_id} into {config.base_model_path}...")
+    snapshot_download(
+        repo_id=config.base_model_id,
+        local_dir=str(config.base_model_path),
+    )
+    if not _base_model_is_complete(config.base_model_path):
+        raise RuntimeError(
+            f"The base model download completed but {config.base_model_path} "
+            "does not contain the expected model and tokenizer files."
+        )
+    return config.base_model_path
+
+
+def _validate_adapter_path(config: ModelConfig) -> None:
     if not config.adapter_path.exists():
         raise FileNotFoundError(
             f"Adapter directory not found: {config.adapter_path}. "
@@ -38,26 +65,16 @@ def _validate_paths(config: ModelConfig) -> None:
         raise FileNotFoundError(
             f"Missing adapter_config.json in {config.adapter_path}."
         )
-    required_tokenizer_files = ("tokenizer.json", "tokenizer_config.json")
-    missing_tokenizer_files = [
-        name
-        for name in required_tokenizer_files
-        if not (config.base_model_path / name).exists()
-    ]
-    if missing_tokenizer_files:
-        raise FileNotFoundError(
-            "Missing tokenizer files in "
-            f"{config.base_model_path}: {', '.join(missing_tokenizer_files)}."
-        )
 
 
 def load_model_and_tokenizer(config: ModelConfig | None = None):
     config = config or ModelConfig()
-    _validate_paths(config)
+    base_model_path = _ensure_base_model(config)
+    _validate_adapter_path(config)
     device = select_device()
 
     tokenizer = AutoTokenizer.from_pretrained(
-        config.base_model_path,
+        base_model_path,
         local_files_only=True,
         use_fast=True,
     )
@@ -86,7 +103,7 @@ def load_model_and_tokenizer(config: ModelConfig | None = None):
         model_kwargs["torch_dtype"] = torch.float32
 
     base_model = AutoModelForCausalLM.from_pretrained(
-        config.base_model_path,
+        base_model_path,
         **model_kwargs,
     )
     model = PeftModel.from_pretrained(

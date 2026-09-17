@@ -7,8 +7,10 @@ from model_loader import ModelConfig, generate_text, load_model_and_tokenizer
 
 
 CONFIG = ModelConfig(
+    base_model_id="Qwen/Qwen2.5-1.5B-Instruct",
     base_model_path=Path("./base_model"),
     adapter_path=Path("./adapter"),
+    download_base_model=True,
     load_in_4bit=True,
 )
 

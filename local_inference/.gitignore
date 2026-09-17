@@ -1,0 +1,9 @@
+__pycache__/
+*.py[cod]
+.gradio/
+
+# Downloaded model and private adapter weights are intentionally not committed.
+base_model/*
+!base_model/.gitkeep
+adapter/*
+!adapter/.gitkeep

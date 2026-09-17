@@ -7,6 +7,7 @@ dependencies = [
     "accelerate>=1.2,<2",
     "bitsandbytes>=0.45,<1",
     "gradio>=5.20,<6",
+    "huggingface-hub>=0.29,<1",
     "peft>=0.14,<1",
     "safetensors>=0.5,<1",
     "torch>=2.6,<2.8",

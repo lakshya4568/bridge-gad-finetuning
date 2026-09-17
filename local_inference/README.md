@@ -1,6 +1,6 @@
 # Local Bridge Inference
 
-This project loads the local `Qwen/Qwen2.5-1.5B-Instruct` base model and the trained LoRA adapter from disk. It contains no training code and does not download model files at runtime.
+This project loads the local `Qwen/Qwen2.5-1.5B-Instruct` base model and the trained LoRA adapter. On the first run, it downloads the base model into `base_model/` if that directory is incomplete. Later runs reuse those local files. The adapter is always expected locally.
 
 ## Layout
 
@@ -14,7 +14,7 @@ local_inference/
 └── base_model/
 ```
 
-Copy the downloaded adapter files into `adapter/`. Copy the complete local base-model directory into `base_model/`. The base model must be the same `Qwen/Qwen2.5-1.5B-Instruct` model used during training.
+Copy the downloaded adapter files into `adapter/`. The base model is downloaded automatically on first load unless you set `download_base_model=False` in the config and provide it yourself. The base model must be the same `Qwen/Qwen2.5-1.5B-Instruct` model used during training.
 
 Expected adapter files include `adapter_model.safetensors` and `adapter_config.json`.
 
@@ -41,4 +41,4 @@ For a quick loader check without launching the UI:
 uv run python -c "from model_loader import load_model_and_tokenizer; load_model_and_tokenizer(); print('model loaded')"
 ```
 
-The application uses NF4 4-bit loading on CUDA by default. Set `load_in_4bit=False` in `app.py` if you need a non-quantized CUDA load and have enough VRAM.
+The application uses NF4 4-bit loading on CUDA by default. Set `load_in_4bit=False` in `app.py` if you need a non-quantized CUDA load and have enough VRAM. The downloaded base model and adapter weights are ignored by git; only code and configuration are committed.
