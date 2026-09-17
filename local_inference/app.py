@@ -59,7 +59,11 @@ CSS = """
 .formula-note { color: #5b6472; font-size: 0.92rem; }
 """
 
-with gr.Blocks(title="Railway Bridge Assistant") as demo:
+with gr.Blocks(
+    title="Railway Bridge Assistant",
+    theme=gr.themes.Soft(),
+    css=CSS,
+) as demo:
     with gr.Column(elem_classes="formula-app"):
         gr.Markdown(
             "# Railway Bridge Assistant\n"
@@ -100,4 +104,4 @@ with gr.Blocks(title="Railway Bridge Assistant") as demo:
 
 
 if __name__ == "__main__":
-    demo.launch(theme=gr.themes.Soft(), css=CSS)
+    demo.launch()
